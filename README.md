@@ -30,7 +30,7 @@ Lo script risolve la storia di espansione di background utilizzando l'equazione 
 
 CITATION
 If you use this code or results, please cite:
-Tartaro, N. (2026). Conformal Dynamic Cosmological Relativity: Unifying H0 and S8. Zenodo. https://zenodo.org/records/18643315
+Tartaro, N. (2026). Conformal Dynamic Cosmological Relativity: Unifying H0 and S8. Zenodo. https://zenodo.org/records/18643966
 
 REFERENCES
 [1] DESI Collaboration, arXiv:2404.03002 (2024).
