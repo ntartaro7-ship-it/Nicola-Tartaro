@@ -1,8 +1,10 @@
+(
+
 C-DCR COSMOLOGY SOLVER
 Unified Resolution of H0 and S8 Tensions via Conformal Dynamic Cosmological Relativity
 
 ABSTRACT
-This repository contains the numerical implementation of the C-DCR framework (Conformal Dynamic Cosmological Relativity). The code demonstrates that recent DESI-Y1 observations (w0 approx -0.738, wa approx -1.005) [1], when interpreted through a dissipative dark sector interaction (beta approx 0.25), naturally resolve the two major tensions of modern cosmology:
+This repository contains the numerical implementation of the C-DCR framework (Conformal Dynamic Cosmological Relativity). The code demonstrates that recent DESI-Y1 observations (w0 approx -0.738, wa approx -1.005) [1], when interpreted through a dissipative dark sector interaction (beta approx 0.55), naturally resolve the two major tensions of modern cosmology:
 
 Hubble Tension: Recovers H0 approx 72.42 km/s/Mpc, consistent with SH0ES measurements [2].
 
