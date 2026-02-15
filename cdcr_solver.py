@@ -19,7 +19,7 @@ OM_L = 1.0 - OM_M
 Z_CMB = 1090.0
 
 # CONFIGURAZIONE GOLDEN NICOLA (Beta = 0.25)
-BETA_T = 0.25
+BETA_T = 0.55
 Z_TR = 0.9
 W0 = -0.7379
 WA = -1.0049
@@ -122,3 +122,4 @@ if __name__ == "__main__":
     print(f"3. La ricalibrazione del Sound Horizon a 137.1 Mpc rende")
     print(f"   l'universo coerente tra CMB e DESI BAO.")
     print("-" * 60)
+
