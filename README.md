@@ -1,41 +1,70 @@
-(
+# C-DCR Solver: Conformal Dynamic Cosmological Relativity
 
-C-DCR COSMOLOGY SOLVER
-Unified Resolution of H0 and S8 Tensions via Conformal Dynamic Cosmological Relativity
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.18671935.svg)](https://doi.org/10.5281/zenodo.18671935)
 
-ABSTRACT
-This repository contains the numerical implementation of the C-DCR framework (Conformal Dynamic Cosmological Relativity). The code demonstrates that recent DESI-Y1 observations (w0 approx -0.738, wa approx -1.005) [1], when interpreted through a dissipative dark sector interaction (beta approx 0.55), naturally resolve the two major tensions of modern cosmology:
+**A numerical solver for the "Golden Fit" configuration of Conformal Dynamic Cosmological Relativity (C-DCR).**
 
-Hubble Tension: Recovers H0 approx 72.42 km/s/Mpc, consistent with SH0ES measurements [2].
+This repository contains the Python implementation used to calculate the background evolution and linear perturbations of the C-DCR model. The code demonstrates how a single dark sector coupling parameter ($\beta \approx 0.45$) can simultaneously resolve the Hubble Tension ($H_0$) and the Clustering Tension ($S_8$).
 
-Clustering Tension: Predicts S8 approx 0.761, consistent with weak lensing surveys [4].
+## 🏆 Key Results: The "Golden Fit"
 
-KEY RESULTS
-The model utilizes a Geometric Lock on the Sound Horizon fixed at the Planck scale [3]. By activating a Symmetron-like screening mechanism at z approx 1, the theory introduces a Dynamic Friction term (beta * phi_dot) that effectively suppresses structure growth without violating early universe constraints.
+By integrating a phantom Dark Energy equation of state ($w_0 \approx -1.15$) with a screened dynamic friction term, this solver identifies a specific region of parameter space that reconciles early and late Universe observations.
 
-METHODOLOGY
-The script solves the background expansion history using the DESI-Y1 best-fit equation of state. It integrates the linear perturbation differential equation:
-delta'' + (2 + H'/H + F_dyn) * delta' - 1.5 * Om_m * delta = 0
-where F_dyn represents the dissipative friction from the dark sector interaction active in the late universe.
+| Parameter | Standard $\Lambda$CDM | **C-DCR (This Work)** | Observation / Target |
+| :--- | :--- | :--- | :--- |
+| **$H_0$** (km/s/Mpc) | $67.4$ (Planck) | **$73.13$** | $73.04$ (SH0ES) ✅ |
+| **$S_8$** (Clustering) | $0.83$ (Planck) | **$0.742$** | $\sim 0.76$ (Weak Lensing) ✅ |
+| **$w_0$** (DE EoS) | $-1.0$ | **$-1.15$** | DESI-Y1 / Pantheon+ |
+| **$\beta$** (Coupling) | $0.0$ | **$0.45$** | Model Prediction |
 
-Risoluzione Unificata delle Tensioni H0 e S8 tramite la Relatività Cosmologica Dinamica Conforme
+> **Note:** The value $S_8 = 0.742$ is a robust prediction for the upcoming Euclid mission (DR1).
 
-ABSTRACT
-Questo repository contiene l'implementazione numerica del framework C-DCR (Relatività Cosmologica Dinamica Conforme). Il codice dimostra che le recenti osservazioni DESI-Y1 (w0 circa -0.738, wa circa -1.005) [1], se interpretate attraverso un'interazione dissipativa nel settore oscuro (beta circa 0.25), risolvono naturalmente le due principali tensioni della cosmologia moderna:
+## 🚀 Features
 
-Tensione di Hubble: Recupera H0 circa 72.42 km/s/Mpc, in accordo con le misurazioni SH0ES [2].
+* **Geometric Lock:** Automatically adjusts $H_0$ to preserve the Planck 2018 sound horizon ($r_d$) while allowing for late-time phantom expansion.
+* **Dynamic Friction Solver:** Solves the modified growth equation for matter perturbations:
+    $$\ddot{\delta} + (2H - \beta \dot{\phi})\dot{\delta} = 4\pi G_{\rm eff} \rho_m \delta$$
+* **Symmetron Screening:** Implements a density-dependent screening mechanism that activates the fifth force only at $z < 1$.
+* **Tension Analysis:** Calculates the Gaussian tension ($\sigma$) between model predictions and SH0ES/Planck data.
 
-Tensione di Clustering: Predice S8 circa 0.761, in accordo con le survey di weak lensing [4].
+## 📦 Installation
 
-METODOLOGIA
-Lo script risolve la storia di espansione di background utilizzando l'equazione di stato best-fit di DESI-Y1. Integra l'equazione differenziale delle perturbazioni lineari applicando un termine di Attrito Dinamico derivante dall'interazione nel settore oscuro.
+No special installation is required. The code depends on standard scientific Python libraries.
 
-CITATION
-If you use this code or results, please cite:
-Tartaro, N. (2026). Conformal Dynamic Cosmological Relativity: Unifying H0 and S8. Zenodo. https://zenodo.org/records/18643966
+```bash
+pip install numpy scipy matplotlib
 
-REFERENCES
-[1] DESI Collaboration, arXiv:2404.03002 (2024).
-[2] A. G. Riess et al., ApJ 908, L6 (2021).
-[3] Planck Collaboration, A&A 641, A6 (2020).
-[4] M. Asgari et al., A&A 645, A104 (2021).
+Usage
+To reproduce the "Golden Fit" results:
+
+Clone the repository:
+git clone [https://github.com/ntartaro7-ship-it/Nicola-Tartaro.git](https://github.com/ntartaro7-ship-it/Nicola-Tartaro.git)
+cd Nicola-Tartaro
+
+Run the main analysis script:
+python cdcr_solver.py
+
+The script will output the calculated cosmological parameters and generate the comparison plots.
+
+Citation
+If you use this code or the C-DCR model in your research, please cite the paper available on Zenodo:
+@article{Tartaro2026,
+  author       = {Tartaro, Nicola},
+  title        = {Conformal Dynamic Cosmological Relativity (C-DCR): Unifying H0, S8, and Galactic Rotation Curves via a Dissipative Dark Sector},
+  year         = {2026},
+  publisher    = {Zenodo},
+  version      = {v5.0},
+  doi          = {10.5281/zenodo.18671935},
+  url          = {[https://doi.org/10.5281/zenodo.18671935](https://doi.org/10.5281/zenodo.18671935)}
+}
+
+Author
+Nicola Tartaro
+
+Independent Researcher / Engineering Student
+
+University of Campania "Luigi Vanvitelli"
+
+Contact: nicola.tartaro@studenti.unicampania.it
