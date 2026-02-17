@@ -1,0 +1,64 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# ==========================================
+# CONFIGURAZIONE FINALE
+# ==========================================
+# Il valore di compromesso trovato dal Global Fit
+A_CRIT_UNIVERSAL = 2126.1
+ML_DISK_5055 = 0.43  # Il valore ottimizzato per la gigante nel Global Fit
+
+FILENAME = "NGC5055_rotmod.dat"
+
+
+def load_data():
+    if not os.path.exists(FILENAME): return None
+    cols = ['Rad', 'Vobs', 'errV', 'Vgas', 'Vdisk', 'Vbul', 'SBdisk', 'SBbul']
+    df = pd.read_csv(FILENAME, sep=r'\s+', engine='python', comment='#', names=cols)
+    return df[df['Rad'] > 0.1]
+
+
+df = load_data()
+
+if df is not None:
+    # ==========================================
+    # CALCOLO MODELLO UNIFICATO SU NGC 5055
+    # ==========================================
+
+    # 1. Componente Barionica (Newton)
+    v_bar_sq = (df['Vgas'] ** 2) + (ML_DISK_5055 * df['Vdisk'] ** 2) + (0.6 * df['Vbul'] ** 2)
+    g_bar = np.maximum(v_bar_sq / df['Rad'], 1e-12)
+
+    # 2. Legge Universale (RAR) con a_crit = 2126
+    x = np.sqrt(g_bar / A_CRIT_UNIVERSAL)
+    g_obs = g_bar / (1 - np.exp(-x))
+
+    v_total = np.sqrt(g_obs * df['Rad'])
+
+    # Newton puro per confronto
+    v_newton = np.sqrt(v_bar_sq)
+
+    # ==========================================
+    # PLOT DI VERIFICA
+    # ==========================================
+    plt.figure(figsize=(10, 6))
+
+    plt.errorbar(df['Rad'], df['Vobs'], yerr=df['errV'], fmt='ko', mfc='none', label='Dati NGC 5055')
+    plt.plot(df['Rad'], v_total, 'r-', linewidth=3, label=f'Modello Unificato (a={A_CRIT_UNIVERSAL:.0f})')
+    plt.plot(df['Rad'], v_newton, 'b--', alpha=0.6, label='Newtoniano Puro')
+
+    plt.title(f"Regression Test su NGC 5055 (Gigante)\nRegge con a_crit={A_CRIT_UNIVERSAL:.0f}?", fontsize=14)
+    plt.xlabel("Raggio [kpc]")
+    plt.ylabel("Velocità [km/s]")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+    # Calcolo Chi-Quadro rapido
+    chi2 = np.sum(((df['Vobs'] - v_total) / df['errV']) ** 2)
+    print(f"Chi-Quadro con parametri unificati: {chi2:.2f}")
+
+else:
+    print("File NGC 5055 non trovato.")
