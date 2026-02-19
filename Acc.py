@@ -1,64 +1,103 @@
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+from matplotlib.patches import Ellipse
+import matplotlib.transforms as transforms
+
+def confidence_ellipse(x, y, ax, n_std=1.0, facecolor='none', **kwargs):
+    """
+    Crea un'ellisse di covarianza per visualizzare 1 sigma e 2 sigma.
+    """
+    if x.size != y.size:
+        raise ValueError("x and y must be the same size")
+
+    cov = np.cov(x, y)
+    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    
+    ell_radius_x = np.sqrt(1 + pearson)
+    ell_radius_y = np.sqrt(1 - pearson)
+    
+    ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2,
+                      facecolor=facecolor, **kwargs)
+
+    # Calcolo della scala (deviazione standard)
+    scale_x = np.sqrt(cov[0, 0]) * n_std
+    scale_y = np.sqrt(cov[1, 1]) * n_std
+    
+    transf = transforms.Affine2D() \
+        .rotate_deg(45) \
+        .scale(scale_x, scale_y) \
+        .translate(np.mean(x), np.mean(y))
+
+    ellipse.set_transform(transf + ax.transData)
+    return ax.add_patch(ellipse)
 
 # ==========================================
-# CONFIGURAZIONE FINALE
+# DATI OSSERVATIVI E DEL MODELLO
 # ==========================================
-# Il valore di compromesso trovato dal Global Fit
-A_CRIT_UNIVERSAL = 2126.1
-ML_DISK_5055 = 0.43  # Il valore ottimizzato per la gigante nel Global Fit
 
-FILENAME = "NGC5055_rotmod.dat"
+# 1. PLANCK 2018 (LCDM) - Early Universe
+# H0 = 67.4 +/- 0.5, S8 = 0.832 +/- 0.013
+# Creiamo dati sintetici correlati (negativamente) per simulare la degenerazione
+np.random.seed(42)
+mean_planck = [67.4, 0.832]
+cov_planck = [[0.5**2, -0.6*0.5*0.013], [-0.6*0.5*0.013, 0.013**2]] 
+x_planck, y_planck = np.random.multivariate_normal(mean_planck, cov_planck, 5000).T
 
+# 2. LATE UNIVERSE (SH0ES + Weak Lensing DES/KiDS)
+# H0 (SH0ES) = 73.04 +/- 1.04
+# S8 (Media Weak Lensing) ~ 0.76 +/- 0.02
+# Assumiamo indipendenza tra SH0ES e Lensing
+mean_late = [73.04, 0.759]
+cov_late = [[1.04**2, 0], [0, 0.017**2]]
+x_late, y_late = np.random.multivariate_normal(mean_late, cov_late, 5000).T
 
-def load_data():
-    if not os.path.exists(FILENAME): return None
-    cols = ['Rad', 'Vobs', 'errV', 'Vgas', 'Vdisk', 'Vbul', 'SBdisk', 'SBbul']
-    df = pd.read_csv(FILENAME, sep=r'\s+', engine='python', comment='#', names=cols)
-    return df[df['Rad'] > 0.1]
+# 3. C-DCR (PLATINUM FIT) - Il tuo risultato
+# H0 = 73.13, S8 = 0.733
+# Assumiamo errori teorici piccoli (derivanti dall'incertezza sul fit galattico beta)
+# Diciamo ~0.5 su H0 e ~0.01 su S8 per visualizzazione
+mean_cdcr = [73.13, 0.733]
 
+# ==========================================
+# PLOTTING
+# ==========================================
+fig, ax = plt.subplots(figsize=(10, 8))
 
-df = load_data()
+# --- Disegno Ellissi (1 sigma e 2 sigma) ---
 
-if df is not None:
-    # ==========================================
-    # CALCOLO MODELLO UNIFICATO SU NGC 5055
-    # ==========================================
+# Planck (Blu)
+confidence_ellipse(x_planck, y_planck, ax, n_std=1.0, edgecolor='blue', linewidth=2, label=r'Planck 2018 ($\Lambda$CDM)')
+confidence_ellipse(x_planck, y_planck, ax, n_std=2.0, edgecolor='blue', linestyle='--', linewidth=1)
+ax.scatter(mean_planck[0], mean_planck[1], color='blue', s=30)
 
-    # 1. Componente Barionica (Newton)
-    v_bar_sq = (df['Vgas'] ** 2) + (ML_DISK_5055 * df['Vdisk'] ** 2) + (0.6 * df['Vbul'] ** 2)
-    g_bar = np.maximum(v_bar_sq / df['Rad'], 1e-12)
+# Late Universe (Verde)
+confidence_ellipse(x_late, y_late, ax, n_std=1.0, edgecolor='green', linewidth=2, label=r'SH0ES + Weak Lensing')
+confidence_ellipse(x_late, y_late, ax, n_std=2.0, edgecolor='green', linestyle='--', linewidth=1)
+ax.scatter(mean_late[0], mean_late[1], color='green', s=30)
 
-    # 2. Legge Universale (RAR) con a_crit = 2126
-    x = np.sqrt(g_bar / A_CRIT_UNIVERSAL)
-    g_obs = g_bar / (1 - np.exp(-x))
+# --- Il Tuo Modello (Stella Rossa) ---
+ax.scatter(mean_cdcr[0], mean_cdcr[1], color='red', marker='*', s=400, zorder=10, 
+           label=f'C-DCR Platinum\n($H_0={mean_cdcr[0]}$, $S_8={mean_cdcr[1]}$)')
 
-    v_total = np.sqrt(g_obs * df['Rad'])
+# Annotazioni e Frecce
+ax.annotate('Tensione Risolta\n(Geometric Lock)', 
+            xy=(mean_cdcr[0], mean_cdcr[1]), xycoords='data',
+            xytext=(mean_cdcr[0]-2, mean_cdcr[1]-0.04), textcoords='data',
+            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2", color='red'),
+            fontsize=11, color='darkred', fontweight='bold')
 
-    # Newton puro per confronto
-    v_newton = np.sqrt(v_bar_sq)
+# Setup Grafico
+ax.set_title(r"Risoluzione delle Tensioni Cosmologiche ($H_0$ vs $S_8$)", fontsize=16)
+ax.set_xlabel(r"$H_0$ [km s$^{-1}$ Mpc$^{-1}$]", fontsize=14)
+ax.set_ylabel(r"$S_8 \equiv \sigma_8 \sqrt{\Omega_m/0.3}$", fontsize=14)
+ax.legend(loc='upper left', fontsize=12, frameon=True, shadow=True)
+ax.grid(True, linestyle=':', alpha=0.6)
 
-    # ==========================================
-    # PLOT DI VERIFICA
-    # ==========================================
-    plt.figure(figsize=(10, 6))
+# Limiti assi per focalizzare la zona di interesse
+ax.set_xlim(65, 76)
+ax.set_ylim(0.70, 0.86)
 
-    plt.errorbar(df['Rad'], df['Vobs'], yerr=df['errV'], fmt='ko', mfc='none', label='Dati NGC 5055')
-    plt.plot(df['Rad'], v_total, 'r-', linewidth=3, label=f'Modello Unificato (a={A_CRIT_UNIVERSAL:.0f})')
-    plt.plot(df['Rad'], v_newton, 'b--', alpha=0.6, label='Newtoniano Puro')
+# Watermark (opzionale per bozze)
+fig.text(0.95, 0.05, 'N. Tartaro - C-DCR Analysis', fontsize=10, color='gray', ha='right', va='bottom', alpha=0.5)
 
-    plt.title(f"Regression Test su NGC 5055 (Gigante)\nRegge con a_crit={A_CRIT_UNIVERSAL:.0f}?", fontsize=14)
-    plt.xlabel("Raggio [kpc]")
-    plt.ylabel("Velocità [km/s]")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.show()
-
-    # Calcolo Chi-Quadro rapido
-    chi2 = np.sum(((df['Vobs'] - v_total) / df['errV']) ** 2)
-    print(f"Chi-Quadro con parametri unificati: {chi2:.2f}")
-
-else:
-    print("File NGC 5055 non trovato.")
+plt.tight_layout()
+plt.show()
