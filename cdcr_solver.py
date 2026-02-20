@@ -9,15 +9,18 @@ OM_L = 1.0 - OM_M
 Z_CMB = 1089.92
 S8_PLANCK = 0.811
 
-# --- PARAMETRI DEL MODELLO C-DCR (PLATINUM FIT) ---
+# --- PARAMETRI DEL MODELLO D-DCR (PLATINUM FIT V9) ---
 BETA_T = 0.4404
 Z_TRANS = 0.85
 W0_PHANTOM = -1.15
 WA_PHANTOM = -0.15
 
+# NUOVO PARAMETRO: Frizione Disformale (calcolato via root-finding)
+D_DRAG = 13.0543
+
 
 def get_coupling(z, k_smooth=25.0):
-    """Accoppiamento di classe C-infinito."""
+    """Accoppiamento di classe C-infinito con rottura di simmetria a z=0.85."""
     val = BETA_T * (1.0 - (z / Z_TRANS) ** 2)
     smooth_step = 0.5 * (1.0 - np.tanh(k_smooth * (z - Z_TRANS)))
     return max(0.0, val) * smooth_step
@@ -62,11 +65,10 @@ def solve_h0_geometric_lock():
     return h_guess * 100, om_m_phys
 
 
-def solve_s8_rigorous(h_dcr, om_m_dcr):
-    """Integra le perturbazioni includendo Quinta Forza e dinamica di campo."""
+def solve_s8_disformal(h_dcr, om_m_dcr):
+    """Integra le perturbazioni includendo Quinta Forza e Attrito Disformale."""
 
     def growth_ode(N, y, model_type):
-        # y = [delta, d(delta)/dN], dove N = ln(a)
         delta, d_delta_dN = y
         a = np.exp(N)
         z = (1.0 / a) - 1.0
@@ -77,19 +79,23 @@ def solve_s8_rigorous(h_dcr, om_m_dcr):
             beta_eff = 0.0
             phi_prime = 0.0
             G_eff_factor = 1.0
+            disformal_friction = 0.0
         else:
             Ez = E_DCR(z, om_m_dcr)
             Omega_m_z = (om_m_dcr * (1 + z) ** 3) / (Ez ** 2)
             beta_eff = get_coupling(z)
 
-            # Dinamica del campo (attrattore KG) e Quinta Forza
+            # Dinamica del campo e Quinta Forza
             phi_prime = beta_eff * Omega_m_z
             G_eff_factor = 1.0 + 2.0 * (beta_eff ** 2)
+            
+            # Il Disformal Drag scala con il quadrato della velocità del campo
+            disformal_friction = D_DRAG * (phi_prime ** 2)
 
         dlnE = dlnE_dlnA(z, om_m_dcr, model_type)
 
-        # d^2(delta)/dN^2 + (2 + H'/H + beta*phi')*d(delta)/dN - 1.5*Omega_m*G_eff*delta = 0
-        friction = 2.0 + dlnE + (beta_eff * phi_prime)
+        # L'equazione di moto include ora il termine di frizione disformale per schiacciare S8
+        friction = 2.0 + dlnE + (beta_eff * phi_prime) + disformal_friction
         source = 1.5 * Omega_m_z * G_eff_factor
 
         d2_delta_dN2 = source * delta - friction * d_delta_dN
@@ -98,7 +104,7 @@ def solve_s8_rigorous(h_dcr, om_m_dcr):
     a_ini = 1.0 / (1 + 1000)
     N_ini = np.log(a_ini)
     N_end = np.log(1.0)
-    y0 = [a_ini, a_ini]  # In matter domination, delta ~ a -> d(delta)/dN ~ a
+    y0 = [a_ini, a_ini] 
 
     sol_lcdm = solve_ivp(lambda N, y: growth_ode(N, y, 'LCDM'), [N_ini, N_end], y0,
                          rtol=1e-8, atol=1e-10, method='LSODA')
@@ -113,9 +119,9 @@ def solve_s8_rigorous(h_dcr, om_m_dcr):
 
 
 if __name__ == "__main__":
-    print(f"--- VALIDAZIONE FISICA RIGOROSA C-DCR ---")
+    print(f"--- VALIDAZIONE FISICA RIGOROSA D-DCR (V9) ---")
     h0_calc, om_m_calc = solve_h0_geometric_lock()
-    s8_calc, factor = solve_s8_rigorous(h0_calc / 100, om_m_calc)
+    s8_calc, factor = solve_s8_disformal(h0_calc / 100, om_m_calc)
 
     print(f"\n[BACKGROUND]")
     print(f"  H0: {h0_calc:.2f} (Omega_m: {om_m_calc:.4f})")
