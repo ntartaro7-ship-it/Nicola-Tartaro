@@ -88,7 +88,7 @@ def solve_s8_disformal(h_dcr, om_m_dcr):
             # Dinamica del campo e Quinta Forza
             phi_prime = beta_eff * Omega_m_z
             G_eff_factor = 1.0 + 2.0 * (beta_eff ** 2)
-            
+
             # Il Disformal Drag scala con il quadrato della velocità del campo
             disformal_friction = D_DRAG * (phi_prime ** 2)
 
@@ -104,7 +104,7 @@ def solve_s8_disformal(h_dcr, om_m_dcr):
     a_ini = 1.0 / (1 + 1000)
     N_ini = np.log(a_ini)
     N_end = np.log(1.0)
-    y0 = [a_ini, a_ini] 
+    y0 = [a_ini, a_ini]
 
     sol_lcdm = solve_ivp(lambda N, y: growth_ode(N, y, 'LCDM'), [N_ini, N_end], y0,
                          rtol=1e-8, atol=1e-10, method='LSODA')
