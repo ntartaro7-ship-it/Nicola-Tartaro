@@ -36,26 +36,19 @@ def confidence_ellipse(x, y, ax, n_std=1.0, facecolor='none', **kwargs):
 # ==========================================
 
 # 1. PLANCK 2018 (LCDM) - Early Universe
-# H0 = 67.4 +/- 0.5, S8 = 0.832 +/- 0.013
-# Creiamo dati sintetici correlati (negativamente) per simulare la degenerazione
 np.random.seed(42)
 mean_planck = [67.4, 0.832]
 cov_planck = [[0.5**2, -0.6*0.5*0.013], [-0.6*0.5*0.013, 0.013**2]] 
 x_planck, y_planck = np.random.multivariate_normal(mean_planck, cov_planck, 5000).T
 
 # 2. LATE UNIVERSE (SH0ES + Weak Lensing DES/KiDS)
-# H0 (SH0ES) = 73.04 +/- 1.04
-# S8 (Media Weak Lensing) ~ 0.76 +/- 0.02
-# Assumiamo indipendenza tra SH0ES e Lensing
 mean_late = [73.04, 0.759]
 cov_late = [[1.04**2, 0], [0, 0.017**2]]
 x_late, y_late = np.random.multivariate_normal(mean_late, cov_late, 5000).T
 
-# 3. C-DCR (PLATINUM FIT) - Il tuo risultato
-# H0 = 73.13, S8 = 0.733
-# Assumiamo errori teorici piccoli (derivanti dall'incertezza sul fit galattico beta)
-# Diciamo ~0.5 su H0 e ~0.01 su S8 per visualizzazione
-mean_cdcr = [73.13, 0.733]
+# 3. D-DCR (DISFORMAL PLATINUM) - Risultato rigoroso aggiornato
+# H0 = 73.13, S8 = 0.744
+mean_ddcr = [73.13, 0.744]
 
 # ==========================================
 # PLOTTING
@@ -63,7 +56,6 @@ mean_cdcr = [73.13, 0.733]
 fig, ax = plt.subplots(figsize=(10, 8))
 
 # --- Disegno Ellissi (1 sigma e 2 sigma) ---
-
 # Planck (Blu)
 confidence_ellipse(x_planck, y_planck, ax, n_std=1.0, edgecolor='blue', linewidth=2, label=r'Planck 2018 ($\Lambda$CDM)')
 confidence_ellipse(x_planck, y_planck, ax, n_std=2.0, edgecolor='blue', linestyle='--', linewidth=1)
@@ -75,15 +67,15 @@ confidence_ellipse(x_late, y_late, ax, n_std=2.0, edgecolor='green', linestyle='
 ax.scatter(mean_late[0], mean_late[1], color='green', s=30)
 
 # --- Il Tuo Modello (Stella Rossa) ---
-ax.scatter(mean_cdcr[0], mean_cdcr[1], color='red', marker='*', s=400, zorder=10, 
-           label=f'C-DCR Platinum\n($H_0={mean_cdcr[0]}$, $S_8={mean_cdcr[1]}$)')
+ax.scatter(mean_ddcr[0], mean_ddcr[1], color='red', marker='*', s=400, zorder=10, 
+           label=f'D-DCR Platinum\n($H_0={mean_ddcr[0]}$, $S_8={mean_ddcr[1]}$)')
 
 # Annotazioni e Frecce
-ax.annotate('Tensione Risolta\n(Geometric Lock)', 
-            xy=(mean_cdcr[0], mean_cdcr[1]), xycoords='data',
-            xytext=(mean_cdcr[0]-2, mean_cdcr[1]-0.04), textcoords='data',
-            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2", color='red'),
-            fontsize=11, color='darkred', fontweight='bold')
+ax.annotate('Tensioni Risolte\n(Unificazione Disformale)', 
+             xy=(mean_ddcr[0], mean_ddcr[1]), xycoords='data',
+             xytext=(mean_ddcr[0]-2.5, mean_ddcr[1]-0.035), textcoords='data',
+             arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2", color='red'),
+             fontsize=11, color='darkred', fontweight='bold')
 
 # Setup Grafico
 ax.set_title(r"Risoluzione delle Tensioni Cosmologiche ($H_0$ vs $S_8$)", fontsize=16)
@@ -96,8 +88,8 @@ ax.grid(True, linestyle=':', alpha=0.6)
 ax.set_xlim(65, 76)
 ax.set_ylim(0.70, 0.86)
 
-# Watermark (opzionale per bozze)
-fig.text(0.95, 0.05, 'N. Tartaro - C-DCR Analysis', fontsize=10, color='gray', ha='right', va='bottom', alpha=0.5)
+# Watermark 
+fig.text(0.95, 0.05, 'N. Tartaro - D-DCR Analysis (V9)', fontsize=10, color='gray', ha='right', va='bottom', alpha=0.5)
 
 plt.tight_layout()
 plt.show()
